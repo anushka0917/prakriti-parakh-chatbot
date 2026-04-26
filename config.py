@@ -1,14 +1,32 @@
 import os
 from pathlib import Path
 
+try:
+    import streamlit as st
+except Exception:  # pragma: no cover
+    st = None
+
+
+def secret_or_env(name: str, default=None):
+    if name in os.environ:
+        return os.environ[name]
+    if st is not None:
+        try:
+            if name in st.secrets:
+                return st.secrets[name]
+        except Exception:
+            pass
+    return default
+
 
 BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = Path(os.getenv("PRAKRITI_DATA_DIR", BASE_DIR / "data")).expanduser()
-DB_PATH = DATA_DIR / os.getenv("PRAKRITI_DB_NAME", "prakriti_users.db")
+DATA_DIR = Path(secret_or_env("PRAKRITI_DATA_DIR", BASE_DIR / "data")).expanduser()
+DB_PATH = DATA_DIR / secret_or_env("PRAKRITI_DB_NAME", "prakriti_users.db")
+DATABASE_URL = secret_or_env("PRAKRITI_DATABASE_URL")
 
-BACKEND = os.getenv("PRAKRITI_BACKEND_URL", "http://127.0.0.1:5000")
-OLLAMA = os.getenv("PRAKRITI_OLLAMA_URL", "http://127.0.0.1:11434")
-OLLAMA_MODEL = os.getenv("PRAKRITI_OLLAMA_MODEL", "mistral:latest")
+BACKEND = secret_or_env("PRAKRITI_BACKEND_URL", "http://127.0.0.1:5000")
+OLLAMA = secret_or_env("PRAKRITI_OLLAMA_URL", "http://127.0.0.1:11434")
+OLLAMA_MODEL = secret_or_env("PRAKRITI_OLLAMA_MODEL", "mistral:latest")
 
 DARK = {
     "bg": "#080B09",

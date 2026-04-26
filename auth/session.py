@@ -1,10 +1,11 @@
 import streamlit as st
+from typing import Optional
 
 from database.chat_history import load_chat_history
 from database.users import create_login_token, delete_login_token, get_user_by_token
 
 
-def _query_token() -> str | None:
+def _query_token() -> Optional[str]:
     token = st.query_params.get("session")
     if isinstance(token, list):
         return token[0] if token else None

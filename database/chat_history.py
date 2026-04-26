@@ -1,35 +1,17 @@
 import json
-import sqlite3
 from datetime import datetime, timezone
+from typing import Dict, List
 
-from database.users import db_connection
+from database.engine import db_connection, placeholder
 
 
-def init_chat_history():
+def load_chat_history(user_id: int) -> List[Dict]:
     with db_connection() as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS chat_messages (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                role TEXT NOT NULL CHECK(role IN ('user', 'assistant')),
-                content TEXT NOT NULL,
-                created_at TEXT NOT NULL,
-                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
-            )
-            """
-        )
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_chat_messages_user_id ON chat_messages(user_id, id)")
-
-
-def load_chat_history(user_id: int) -> list[dict]:
-    with db_connection() as conn:
-        conn.row_factory = sqlite3.Row
         rows = conn.execute(
-            """
+            f"""
             SELECT role, content
             FROM chat_messages
-            WHERE user_id = ?
+            WHERE user_id = {placeholder()}
             ORDER BY id ASC
             """,
             (user_id,),
@@ -41,37 +23,35 @@ def load_chat_history(user_id: int) -> list[dict]:
 def save_chat_message(user_id: int, role: str, content: str):
     with db_connection() as conn:
         conn.execute(
-            """
+            f"""
             INSERT INTO chat_messages (user_id, role, content, created_at)
-            VALUES (?, ?, ?, ?)
+            VALUES ({placeholder()}, {placeholder()}, {placeholder()}, {placeholder()})
             """,
             (user_id, role, content, datetime.now(timezone.utc).isoformat()),
         )
 
 
-def replace_chat_history(user_id: int, messages: list[dict]):
+def replace_chat_history(user_id: int, messages: List[Dict]):
     with db_connection() as conn:
-        conn.execute("DELETE FROM chat_messages WHERE user_id = ?", (user_id,))
-        conn.executemany(
-            """
-            INSERT INTO chat_messages (user_id, role, content, created_at)
-            VALUES (?, ?, ?, ?)
-            """,
-            [
+        conn.execute(f"DELETE FROM chat_messages WHERE user_id = {placeholder()}", (user_id,))
+        for message in messages:
+            conn.execute(
+                f"""
+                INSERT INTO chat_messages (user_id, role, content, created_at)
+                VALUES ({placeholder()}, {placeholder()}, {placeholder()}, {placeholder()})
+                """,
                 (
                     user_id,
                     message["role"],
                     message["content"],
                     datetime.now(timezone.utc).isoformat(),
-                )
-                for message in messages
-            ],
-        )
+                ),
+            )
 
 
 def clear_chat_history(user_id: int):
     with db_connection() as conn:
-        conn.execute("DELETE FROM chat_messages WHERE user_id = ?", (user_id,))
+        conn.execute(f"DELETE FROM chat_messages WHERE user_id = {placeholder()}", (user_id,))
 
 
 def export_chat_history(user_id: int) -> str:
