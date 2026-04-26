@@ -10,7 +10,13 @@ except Exception:  # pragma: no cover
 def secret_or_env(name: str, default=None):
     if name in os.environ:
         return os.environ[name]
-    if st is not None:
+    base_dir = Path(__file__).resolve().parent
+    secrets_candidates = [
+        Path.home() / ".streamlit" / "secrets.toml",
+        base_dir / ".streamlit" / "secrets.toml",
+    ]
+
+    if st is not None and any(path.exists() for path in secrets_candidates):
         try:
             if name in st.secrets:
                 return st.secrets[name]

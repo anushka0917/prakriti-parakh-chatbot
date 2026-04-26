@@ -2,6 +2,14 @@ import html
 
 import streamlit as st
 
+st.set_page_config(
+    page_title="Prakriti Parakh",
+    page_icon="🪷",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
+
+
 from auth.session import init_session_state, is_logged_in, restore_user_from_token
 from backend.prakriti_service import get_response
 from database.chat_history import save_chat_message
@@ -10,14 +18,6 @@ from frontend.auth.panel import render_auth_panel
 from frontend.components import render_bot_message, render_controls, render_footer, render_hero, render_reading_area
 from frontend.styles import app_css
 from frontend.theme import active_theme
-
-
-st.set_page_config(
-    page_title="Prakriti Parakh",
-    page_icon="🪷",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-)
 
 
 init_session_state()
